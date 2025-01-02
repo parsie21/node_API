@@ -33,7 +33,7 @@ var expressServer = server.expressServer;
 
 async function sendSignal() {
 	try {
-		const response = await axios.post('http://'+expressServer+':'+expressPort+'/trigger', {
+		const response = await axios.post('http://'+expressServer+':'+expressPort+'/analyzeRequirement', {
 			source : 'vscode-extension',
 			timestamp: new Date().toISOString(),
 		})

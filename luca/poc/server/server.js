@@ -3,14 +3,14 @@ const axios = require('axios');
 
 //Express configuration
 const app = express();
-const expressServer = '172.0.0.1'
+const expressServer = 'localhost'
 const expressPort = 4000;
 
 module.exports.expressServer = expressServer;
 module.exports.expressPort = expressPort;
 
 app.listen(expressPort, () => {
-    console.log(`Express server is running on port ${PORT}`);
+    console.log(`Express server is running on port ${expressPort}`);
 });
 
 
