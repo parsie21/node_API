@@ -11,7 +11,7 @@ const data = {
     model: 'mistral',
     prompt: 'What is the capital of Italy?',
     stream: false, // Set to true if you want streaming responses
-};  
+};
 
 // Make the POST request
 
