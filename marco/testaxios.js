@@ -26,13 +26,14 @@ const requirementsContext = `Analizza il seguente requisito software e valuta la
                             Non rispondere a caso se non riesci a valutare efficacemente il requisito, se hai dubbi o sei insicuro, dai passed:false
                             Requisito:`
 
+const codeContext = ''
+
 //-------------------------------
 //Main:
 model = 'llama3.2:latest';
 prompt = 'Ciao dimmi come si costruisce un tavolo';
 
 // sendPromptToOllama(model,prompt);
-
 
 var requisito = "La funzione deve calcolare e stampare i primi numeri di Fibonacci.";
 analyzeRequirementWithOllama(requisito);

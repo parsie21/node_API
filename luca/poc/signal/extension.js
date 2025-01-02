@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const axios = require('axios')
 
@@ -11,9 +9,7 @@ const axios = require('axios')
  */
 function activate(context) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "signal" is now active!');
+	console.log('Your extension "ExtensionSignal" is now active!');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -28,18 +24,23 @@ function activate(context) {
 	context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
 function deactivate() {}
+
+//When Signal is called:
+var server = require('../server/server.js');
+var expressPort = server.expressPort;
+var expressServer = server.expressServer;
 
 async function sendSignal() {
 	try {
-		const response = await axios.post('http://localhost:3000/trigger', {
+		const response = await axios.post('http://'+expressServer+':'+expressPort+'/trigger', {
 			source : 'vscode-extension',
-			timestamp: new Date().toISOString(), //add current timestamp
+			timestamp: new Date().toISOString(),
 		})
 
-		console.log('signal sent successfully', response.data);
-		vscode.window.showInformationMessage('signal sent successfully');
+		console.log('Signal Sent Successfully', response.data);
+		vscode.window.showInformationMessage('Signal Sent Successfully');
+		
 	} catch (error) {
 		console.error('Error sending signal', error);
 		vscode.window.showErrorMessage('Error sending signal');

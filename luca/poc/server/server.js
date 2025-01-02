@@ -1,8 +1,18 @@
 const express = require('express');
 const axios = require('axios');
 
+//Express configuration
 const app = express();
-const PORT = 3000;
+const expressServer = '172.0.0.1'
+const expressPort = 4000;
+
+module.exports.expressServer = expressServer;
+module.exports.expressPort = expressPort;
+
+app.listen(expressPort, () => {
+    console.log(`Express server is running on port ${PORT}`);
+});
+
 
 // Ollama configuration
 const ollamaServer = '192.168.1.231';
@@ -27,25 +37,13 @@ const requirementsContext = `Analizza il seguente requisito software e valuta la
                             Non rispondere a caso se non riesci a valutare efficacemente il requisito, se hai dubbi o sei insicuro, dai passed:false
                             Requisito:`;
 
-// Middleware to parse JSON
-app.use(express.json());
+const requirement = 'La funzione deve calcolare i primi n numeri di Fibonacci';
+
 
 // Endpoint to listen for signals
-app.post('/trigger', async (req, res) => {
+app.post('/analyzeRequirement', async (req, res) => {
     try {
-    /*
-    qui requirement potremmo sostituirlo con una stringa che rappresenta 
-    il codice del file scelto in vsc, giusto per mostrare che funziona
-    rappresenta comunque il prompt dato alla chat
-    */
-        console.log("trying");
-        // const { requirement } = req.body; // Expecting { requirement: "text" }
-        const { requirement } = { requirement: "print('Hello World')" }
-        if (!requirement) {
-            console.log("requirements not provided");
-            return res.status(400).json({ error: 'Requirement not provided' });
-        }
-
+        console.log("/analyzeRequirement endpoint called");
         console.log('Signal received:', requirement);
 
         // Call Ollama API
@@ -58,16 +56,16 @@ app.post('/trigger', async (req, res) => {
                 stream: false
             }
         );
-
+        //Print Ollama response
         console.log('Ollama response:', ollamaResponse.data.response);
-
         res.status(200).json({ ollamaResponse: ollamaResponse.data.response });
+
     } catch (error) {
         console.error('Error during Ollama API call:', error.message);
         res.status(500).json({ error: 'Failed to process the requirement' });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+
+// Middleware to parse JSON
+app.use(express.json());
