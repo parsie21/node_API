@@ -14,9 +14,10 @@
   "contributes": {
     "commands": [
     {
-      "command": "sendSignal.sendSignalToServer",
-      "title": "Send signal to the server"
-    }]
+      "command": "sendSignal.sendRequirementToOllama",
+      "title": "Send requirement to Ollama"
+    }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
