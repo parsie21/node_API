@@ -5,11 +5,12 @@ dotenv.config();
 
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL;
 
-exports.sendMessageToOllama = async (model, prompt) => {
+exports.sendMessageToOllama = async (model, prompt, system) => {
   try {
     const response = await axios.post(OLLAMA_API_URL, {
       model,
       prompt,
+      system,
       stream: false,
     });
 
