@@ -2,8 +2,9 @@ const ollamaService = require('../services/ollamaService');
 
 exports.analyzeRequirement = async (req, res) => {
   try {
-    const { id, requirement, code } = req.body;
+    console.log("ollamaController.analyzeRequirement");
 
+    const { id, requirement, code } = req.body;
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'ID is required and must be a string' });
     }
@@ -14,8 +15,11 @@ exports.analyzeRequirement = async (req, res) => {
       return res.status(400).json({ error: 'Code is required and must be a string' });
     }
 
+
+    console.log("Pre Prompt Requirement");
+
     //Analisi semantica requisito
-    const requirementModel = 'llama3.2:1b';
+    const requirementModel = 'llama3.2:latest';
     const requirementContext = `Analizza il seguente requisito software e valuta la sua semantica.
     Rispondi esclusivamente con un file JSON nel seguente formato:
         {
@@ -32,13 +36,25 @@ exports.analyzeRequirement = async (req, res) => {
     - Nella lista "suggestions", specifica come migliorare il requisito (es. chiarire dettagli, rimuovere ambiguità, completare informazioni mancanti).
     
     Sii molto critico e stringente, sei un programmatore che deve valutare i requisiti che deve implementare nel codice per evitare che siano ambigui.
-    Non rispondere a caso se non riesci a valutare efficacemente il requisito, se hai dubbi o sei insicuro, dai passed:false
+    Se non sai come rispondere, se hai dubbi o sei insicuro, rispondi con il valore passed: 'false'
+    Non includere backtick, triple backtick, code fence, né testo aggiuntivo. Rispondi esclusivamente con JSON valido.
     Requisito:`;
 
     const requirementAnalysis = await ollamaService.sendMessageToOllama(requirementModel, requirement, requirementContext);
+    console.log("Risposta 1:"+requirementAnalysis.response);
+
+    //Parsing JSON
+    try {
+      requirementAnalysisObj = JSON.parse(requirementAnalysis.response || '{}');
+
+    } catch (parseErr) {
+      console.error('Error parsing requirementAnalysis JSON:', parseErr);
+      requirementAnalysisObj = { parseError: true };
+    }
+
 
     //Analisi del codice
-    const codeModel = 'llama3.2:1b';
+    const codeModel = 'qwen2.5-coder:7b';
     const codeContext = `Analizza il seguente requisito software e il codice associato per verificare se il codice soddisfa il requisito. Rispondi esclusivamente con un file JSON nel seguente formato:
     {
       "quality_score": <0-100>,
@@ -61,20 +77,15 @@ exports.analyzeRequirement = async (req, res) => {
       - 50-69: Codice sufficiente, ma con problemi significativi.
       - <50: Codice insufficiente, non soddisfa il requisito o è di bassa qualità.
     2. **Issues**: Identifica errori, malfunzionamenti o discrepanze tra codice e requisito.
-    3. **Suggestions**: Elenca i modi per migliorare il codice o risolvere problemi.`;
+    3. **Suggestions**: Elenca i modi per migliorare il codice o risolvere problemi.
+    
+    Non includere backtick, triple backtick, code fence, né testo aggiuntivo. Rispondi esclusivamente con JSON valido.`;
     const codePrompt = `REQUISITO: "${requirement}" \n CODICE: "${code}" `;
 
     const codeAnalysis = await ollamaService.sendMessageToOllama(codeModel, codePrompt, codeContext);
-    
+    console.log("Risposta 2:"+codeAnalysis.response);
+
     //Parsing JSON
-    try {
-      requirementAnalysisObj = JSON.parse(requirementAnalysis.response || '{}');
-
-    } catch (parseErr) {
-      console.error('Error parsing requirementAnalysis JSON:', parseErr);
-      requirementAnalysisObj = { parseError: true };
-    }
-
     try {
       codeAnalysisObj = JSON.parse(codeAnalysis.response || '{}');
 
@@ -82,25 +93,29 @@ exports.analyzeRequirement = async (req, res) => {
       console.error('Error parsing codeAnalysis JSON:', parseErr);
       codeAnalysisObj = { parseError: true };
     }
-
+  
     //Valuta i parametri
-    finalScore = codeAnalysisObj.quality_score;
-    finalPassed = (requirementAnalysisObj.passed) && (finalScore>=80);
+    finalScore = codeAnalysisObj?.quality_score || 0;
+    requirementPassed = requirementAnalysisObj?.passed || false;
+    finalPassed = (requirementPassed) && (finalScore>=80);
 
-    if (!requirementAnalysisObj.passed) {
+    finalIssues = []
+    codeIssues = codeAnalysisObj?.issues || [];
+    if (!requirementPassed) {
       finalIssues = [
         "Il requisito è ambiguo, poco chiaro o incompleto",
         ...codeIssues
       ];
     } else {
-      finalIssues = codeAnalysisObj.issues;
+      finalIssues = codeIssues;
     }
 
+    requirementSuggestions = requirementAnalysisObj?.suggestions || [];
+    codeSuggestions = codeAnalysisObj?.suggestions || [];
     finalSuggestions = [
-      ...requirementAnalysisObj.suggestions,
-      ...codeAnalysisObj.suggestions
+      ...requirementSuggestions,
+      ...codeSuggestions
     ];
-    
 
 
     // Compone JSON di risposta:
