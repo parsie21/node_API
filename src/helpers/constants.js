@@ -1,10 +1,10 @@
 
 
 
-requirementModel = 'llama3.2:latest';
+const requirementModel = 'llama3.2:latest';
 
 
-requirementContext = `Analizza il seguente requisito software e valuta la sua semantica.
+const requirementContext = `Analizza il seguente requisito software e valuta la sua semantica.
     Rispondi esclusivamente con un file JSON nel seguente formato:
         {
             "passed": <true/false>,
