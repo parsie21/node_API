@@ -52,7 +52,7 @@ exports.analyzeRequirements = async (req, res) => {
 
         let codeAnalysisObj;
         try {
-          const codeAnalysis = await ollamaService.sendMessageToOllama(codeModel, codePrompt, codeContext);
+          const codeAnalysis = await ollamaService.sendMessageToOllama(codeModel, codePrompt(requirement, code), codeContext);
           codeAnalysisObj = JSON.parse(codeAnalysis.response || '{}');
         } catch (err) {
           console.error(`Error analyzing code for ID ${id}:`, err.message);

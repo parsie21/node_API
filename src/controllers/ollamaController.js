@@ -44,7 +44,7 @@ exports.analyzeRequirement = async (req, res) => {
     const codeContext = constants.codeContext;
     const codePrompt = constants.codePrompt;
 
-    const codeAnalysis = await ollamaService.sendMessageToOllama(codeModel, codePrompt, codeContext);
+    const codeAnalysis = await ollamaService.sendMessageToOllama(codeModel, codePrompt(requirement, code), codeContext);
     console.log("Risposta 2:"+codeAnalysis.response);
 
     //Parsing JSON

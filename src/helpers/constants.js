@@ -48,7 +48,7 @@ const codeContext = `Analizza il seguente requisito software e il codice associa
    
     Non includere backtick, triple backtick, code fence, né testo aggiuntivo. Rispondi esclusivamente con JSON valido.`;
 
-const codePrompt = `REQUISITO: "${requirement}" \n CODICE: "${code}" `;
+const codePrompt = (requirement, code) => `REQUISITO: "${requirement}" \n CODICE: "${code}" `;
 
 module.exports = {
     requirementModel,
