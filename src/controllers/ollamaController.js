@@ -4,11 +4,9 @@ const constants = require('../helpers/constants.js')
 exports.analyzeRequirement = async (req, res) => {
   try {
     console.log("ollamaController.analyzeRequirement");
-
-    // input 
+ 
     const { id, requirement, code } = req.body;
 
-    // controllo 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'ID is required and must be a string' });
     }
@@ -22,14 +20,13 @@ exports.analyzeRequirement = async (req, res) => {
 
     console.log("Pre Prompt Requirement");
 
-    //Analisi semantica requisito
     const requirementModel = constants.requirementModel;
     const requirementContext = constants.requirementContext
 
     const requirementAnalysis = await ollamaService.sendMessageToOllama(requirementModel, requirement, requirementContext);
     console.log("Risposta 1:"+requirementAnalysis.response);
 
-    //Parsing JSON
+    let requirementAnalysisObj = {};
     try {
       requirementAnalysisObj = JSON.parse(requirementAnalysis.response || '{}');
 
@@ -38,8 +35,6 @@ exports.analyzeRequirement = async (req, res) => {
       requirementAnalysisObj = { parseError: true };
     }
 
-
-    //Analisi del codice
     const codeModel = constants.codeModel;
     const codeContext = constants.codeContext;
     const codePrompt = constants.codePrompt;
@@ -47,7 +42,7 @@ exports.analyzeRequirement = async (req, res) => {
     const codeAnalysis = await ollamaService.sendMessageToOllama(codeModel, codePrompt(requirement, code), codeContext);
     console.log("Risposta 2:"+codeAnalysis.response);
 
-    //Parsing JSON
+    let codeAnalysisObj = {};
     try {
       codeAnalysisObj = JSON.parse(codeAnalysis.response || '{}');
 
@@ -56,13 +51,12 @@ exports.analyzeRequirement = async (req, res) => {
       codeAnalysisObj = { parseError: true };
     }
   
-    //Valuta i parametri
-    finalScore = codeAnalysisObj?.quality_score || 0;
-    requirementPassed = requirementAnalysisObj?.passed || false;
-    finalPassed = (requirementPassed) && (finalScore>=80);
+    const finalScore = codeAnalysisObj?.quality_score || 0;
+    const requirementPassed = requirementAnalysisObj?.passed || false;
+    const finalPassed = (requirementPassed) && (finalScore>=80);
 
-    finalIssues = []
-    codeIssues = codeAnalysisObj?.issues || [];
+    const codeIssues = codeAnalysisObj?.issues || [];
+    let finalIssues = [];
     if (!requirementPassed) {
       finalIssues = [
         "Il requisito è ambiguo, poco chiaro o incompleto",
@@ -72,22 +66,12 @@ exports.analyzeRequirement = async (req, res) => {
       finalIssues = codeIssues;
     }
 
-    requirementSuggestions = requirementAnalysisObj?.suggestions || [];
-    codeSuggestions = codeAnalysisObj?.suggestions || [];
-    finalSuggestions = [
+    const requirementSuggestions = requirementAnalysisObj?.suggestions || [];
+    const codeSuggestions = codeAnalysisObj?.suggestions || [];
+    const finalSuggestions = [
       ...requirementSuggestions,
       ...codeSuggestions
     ];
-
-
-    // Compone JSON di risposta:
-      // {
-      //   "id": "REQ-001",
-      //   "passed": true, 
-      //   "quality_score": 85,
-      //   "issues": ["Manca il controllo su n negativo",
-      //   "suggestions": ["Verificare n non negativo"]
-      // }
       
     const finalAnalysis = {
       id,
@@ -99,7 +83,6 @@ exports.analyzeRequirement = async (req, res) => {
     
     console.log('Valutazione finale:', finalAnalysis);
 
-    //Manda risposta con il nuovo JSON
     res.status(200).json(finalAnalysis);
     
   } catch (error) {
@@ -107,13 +90,3 @@ exports.analyzeRequirement = async (req, res) => {
     res.status(500).json({ error: 'Failed to analyze requirement' });
   }
 };
-
-/*
-
-curl -X POST http://localhost:3000/api/ollama/analyzeRequirement \
--H "Content-Type: application/json" \
--d '{
-  "requirement": "La funzione deve calcolare i numeri di fibonacci"
-}'
-
-*/
