@@ -11,6 +11,7 @@ exports.sendMessageToOllama = async (model, prompt, system) => {
       model,
       prompt,
       system,
+      format: "json",
       stream: false,
     });
 
